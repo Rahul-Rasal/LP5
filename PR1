@@ -1,0 +1,108 @@
+#include <iostream>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+// Node class
+class Node
+{
+public:
+    int data;
+    Node* left;
+    Node* right;
+
+    Node(int value)
+    {
+        data = value;
+        left = NULL;
+        right = NULL;
+    }
+};
+
+// Parallel DFS
+void parallelDFS(Node* root)
+{
+    if(root == NULL)
+        return;
+
+    cout << root->data << " ";
+
+    #pragma omp parallel sections
+    {
+        #pragma omp section
+        {
+            parallelDFS(root->left);
+        }
+
+        #pragma omp section
+        {
+            parallelDFS(root->right);
+        }
+    }
+}
+
+// Parallel BFS
+void parallelBFS(Node* root)
+{
+    if(root == NULL)
+        return;
+
+    queue<Node*> q;
+
+    q.push(root);
+
+    while(!q.empty())
+    {
+        Node* current = q.front();
+        q.pop();
+
+        cout << current->data << " ";
+
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            {
+                if(current->left)
+                {
+                    #pragma omp critical
+                    q.push(current->left);
+                }
+            }
+
+            #pragma omp section
+            {
+                if(current->right)
+                {
+                    #pragma omp critical
+                    q.push(current->right);
+                }
+            }
+        }
+    }
+}
+
+int main()
+{
+    // Create Binary Tree
+    Node* root = new Node(1);
+
+    root->left = new Node(2);
+    root->right = new Node(3);
+
+    root->left->left = new Node(4);
+    root->left->right = new Node(5);
+
+    root->right->left = new Node(6);
+    root->right->right = new Node(7);
+
+    // DFS
+    cout << "Parallel DFS:\n";
+    parallelDFS(root);
+
+    // BFS
+    cout << "\n\nParallel BFS:\n";
+    parallelBFS(root);
+
+    return 0;
+}
