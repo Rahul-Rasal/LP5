@@ -1,0 +1,48 @@
+# Linear Regression using Deep Neural Network
+# Boston House Price Prediction
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# Load dataset
+data = pd.read_csv("boston_house_prices.csv")
+
+# Input and output
+X = data.drop("PRICE", axis=1)
+y = data["PRICE"]
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2
+)
+
+# Create Deep Neural Network
+model = Sequential()
+
+model.add(Dense(16, activation='relu', input_shape=(X_train.shape[1],)))
+model.add(Dense(1))
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='mean_squared_error'
+)
+
+# Train model
+model.fit(X_train, y_train, epochs=50)
+
+# Test model
+loss = model.evaluate(X_test, y_test)
+
+# Predict house prices
+predictions = model.predict(X_test)
+
+print("Loss:", loss)
+
+print("\nPredicted Prices:")
+print(predictions[:5])
+
+print("\nActual Prices:")
+print(y_test[:5])B
