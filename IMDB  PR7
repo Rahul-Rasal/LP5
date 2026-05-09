@@ -1,0 +1,49 @@
+# Binary Classification using Deep Neural Network
+# IMDB Movie Review Sentiment Analysis
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# Load dataset
+data = pd.read_csv("/IMDB Dataset.csv")
+
+# Input and output
+X = data["review"]
+y = data["sentiment"].map({"positive":1, "negative":0})
+
+# Convert text into numbers
+vectorizer = TfidfVectorizer(max_features=5000)
+X = vectorizer.fit_transform(X).toarray()
+
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2
+)
+
+# Create model
+model = Sequential()
+
+# Hidden layer
+model.add(Dense(16, activation='relu', input_shape=(5000,)))
+
+# Output layer
+model.add(Dense(1, activation='sigmoid'))
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+# Train model
+model.fit(X_train, y_train, epochs=5)
+
+# Test model
+loss, accuracy = model.evaluate(X_test, y_test)
+
+# Print accuracy
+print("Accuracy:", accuracy)
