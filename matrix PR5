@@ -1,0 +1,65 @@
+%%writefile matrix_mul.cu
+
+#include <iostream>
+#include <cuda_runtime.h>
+
+using namespace std;
+
+// CUDA Kernel
+__global__ void matrixMul(int A[][2], int B[][2], int C[][2])
+{
+    int row = threadIdx.y;
+    int col = threadIdx.x;
+
+    C[row][col] = 0;
+
+    for (int k = 0; k < 2; k++)
+    {
+        C[row][col] += A[row][k] * B[k][col];
+    }
+}
+
+int main()
+{
+    int A[2][2] = {{1, 2},
+                   {3, 4}};
+
+    int B[2][2] = {{5, 6},
+                   {7, 8}};
+
+    int C[2][2];
+
+    int (*d_A)[2], (*d_B)[2], (*d_C)[2];
+
+    cudaMalloc(&d_A, sizeof(A));
+    cudaMalloc(&d_B, sizeof(B));
+    cudaMalloc(&d_C, sizeof(C));
+
+    cudaMemcpy(d_A, A, sizeof(A), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B, sizeof(B), cudaMemcpyHostToDevice);
+
+    matrixMul<<<1, dim3(2,2)>>>(d_A, d_B, d_C);
+
+    cudaMemcpy(C, d_C, sizeof(C), cudaMemcpyDeviceToHost);
+
+    cout << "Result Matrix:\n";
+
+    for(int i = 0; i < 2; i++)
+    {
+        for(int j = 0; j < 2; j++)
+        {
+            cout << C[i][j] << " ";
+        }
+        cout << endl;
+    }
+
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+
+    return 0;
+}
+
+!nvcc matrix_mul.cu -o matrix_mul
+
+!./matrix_mul
